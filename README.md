@@ -27,11 +27,13 @@ TODO
 1. Download the [latest image from the releases section](/releases).
 2. Open a terminal and navigate to where you downloaded the image file.
 3. Ensure that xz is installed on your computer.
+
 | **OS**        | **Command**            |
 |---------------|------------------------|
 | Ubuntu/Debian | `apt install xz-utils` |
 | Arch/Manjaro  | `pacman -S xz`         |
 | Mac OS        | `brew install xz`      |
+
 4. Run `xz -d -c IMAGE_NAME.img.xz | sudo dd of=/dev/sdX`, replacing IMAGE\_NAME and /dev/sdX with the appropriate paths, and adding flags per your preferences.
 
 ### First Boot
