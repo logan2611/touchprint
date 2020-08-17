@@ -1,0 +1,13 @@
+[Unit]
+Description=MJPG-Streamer Daemon
+Wants=nginx.service
+
+[Service]
+Type=simple
+User=octoprint
+Group=octoprint
+ExecStart=/usr/local/bin/start-mjpg 
+
+[Install]
+WantedBy=multi-user.target
+ 

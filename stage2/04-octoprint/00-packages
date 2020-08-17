@@ -1,0 +1,8 @@
+python-pip
+python-dev
+python-setuptools
+python-virtualenv
+git
+libyaml-dev
+nginx
+ffmpeg 

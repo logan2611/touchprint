@@ -1,0 +1,13 @@
+[Unit]
+Description=OctoPrint Daemon
+Wants=nginx.service
+
+[Service]
+Type=simple
+User=octoprint
+Group=octoprint
+ExecStart=/srv/octoprint/bin/octoprint --host localhost --port 5000
+
+[Install]
+WantedBy=multi-user.target
+ 

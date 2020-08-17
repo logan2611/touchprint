@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]; then 
+  echo "This script needs to be run as root."
+  exit 1
+fi
+
+# Import shared functions
+source /usr/local/lib/octo-lib.sh
+
+main_menu () {
+  local MAINMENU=$(dialog --nocancel --title "Pi Setup" --menu "" 10 50 0 \
+     "1" "Configure networking" \
+     "2" "Change password for pi" \
+     "3" "Configure services" \
+     "4" "Configure screen timeout" \
+     "5" "Configure Nginx" \
+     "6" "Configure MJPG" \
+     "7" "Exit" 3>&1 1>&2 2>&3)
+
+  case $MAINMENU in
+    "1") nmtui; main_menu; return 0;;
+    "2") change_password; main_menu; return 0;;
+    "3") service_select; main_menu; return 0;;
+    "4") screen_timeout; main_menu; return 0;;
+    "5") nginx_config; main_menu; return 0;;
+    "6") video_config; main_menu; return 0;;
+    "7") return 0;;
+  esac 
+}
+
+main_menu
+if dialog --title "Reboot Confirmation" --yesno "Some changes require a reboot to take effect.\nDo you want to reboot now?" 10 50; then
+  reboot
+fi

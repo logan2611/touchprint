@@ -1,0 +1,2 @@
+[ -f ~/.xtimeout ] && . ~/.xtimeout
+exec openbox-session

@@ -1,0 +1,11 @@
+xserver-xorg
+xserver-xorg-video-fbdev
+xserver-xorg-video-fbturbo
+xinit
+menu-xdg
+zenity
+xdg-utils
+gvfs-backends
+gvfs-fuse
+gnome-themes-standard
+gnome-icon-theme

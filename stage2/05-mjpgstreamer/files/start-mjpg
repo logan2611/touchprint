@@ -1,0 +1,2 @@
+#!/bin/bash
+/usr/local/bin/mjpg_streamer -i input_uvc.so -o "output_http.so --port 8080 -w /var/www/mjpg" 
