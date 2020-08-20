@@ -137,5 +137,5 @@ video_config () {
   [[ "$DEVICE_MENU" == "" ]] && return 0
  
   # Write selected value to startup script
-  echo -e '#!/bin/bash'"\n/usr/local/bin/mjpg_streamer -i \"input_uvc.so -d $DEVICE_MENU\" -o \"output_http.so --port 8080\"" > /usr/local/bin/start-mjpg
+  echo -e '#!/bin/bash'"\n/usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -i $DEVICE_MENU -f v4l2 -f mpjpeg -" > /usr/local/bin/start-mjpg
 }

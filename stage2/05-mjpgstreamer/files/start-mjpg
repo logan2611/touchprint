@@ -1,2 +1,2 @@
 #!/bin/bash
-/usr/local/bin/mjpg_streamer -i input_uvc.so -o "output_http.so --port 8080 -w /var/www/mjpg" 
+/usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -i /dev/video0 -f v4l2 -f mpjpeg -
