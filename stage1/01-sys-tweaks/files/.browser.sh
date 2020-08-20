@@ -13,8 +13,13 @@ fi
 # Override the automatically detected address if the user wants to
 if [[ -f ~/.overrideurl.sh ]]; then source ~/.overrideurl.sh; fi
 
-# Wait until OctoPrint comes up
+# Wait until Nginx/override comes up
 while ! curl "$ADDRESS" 2>&1 >/dev/null; do
+  sleep 1
+done
+
+# Wait until OctoPrint comes up if it is enabled
+while [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && ! curl "localhost:5000"; do
   sleep 1
 done
 

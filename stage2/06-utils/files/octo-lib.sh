@@ -51,8 +51,10 @@ service_select () {
 
   if [[ $ENABLE_MJPG == true ]]; then
     systemctl enable mjpg-streamer
+    raspi-config nonint do_camera 0 # Counter intuitively enables the camera  
   else
     systemctl disable mjpg-streamer
+    raspi-config nonint do_camera 1 # Disables the camera
   fi
 
   if [[ $ENABLE_GUI == true ]]; then
