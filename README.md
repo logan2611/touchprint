@@ -45,14 +45,15 @@ TODO
 
 ### OctoPrint Setup
 - If the GUI is enabled, you can setup OctoPrint on the Raspberry Pi. You can also setup OctoPrint by opening up a web browser on another computer and navigating to `https://RPI-IP`, replacing RPI-IP with the IP address of your Raspberry Pi.
-- If MJPG-Streamer is enabled, you can put `/webcam/?action=stream` into the Stream URL box to enable it in OctoPrint.
+- If MJPG-Streamer is enabled, you can put `/webcam` into the Stream URL box to enable it in OctoPrint.
 
 ### Accessing OctoPrint
 - If OctoPrint is enabled, you can access it at `https://RPI-IP`, replacing RPI-IP with the IP address of your Raspberry Pi.
 
 ### Reporting Bugs
-Please report any bugs by [filing an issue](/issues). Please include as much detail as you can, including:
+Please report any bugs by [filing an issue](/issues). Please include as much detail as you can, including (but not limited to):
 - Raspberry Pi Model
+- Version of TouchPrint
 - What you were doing when the bug occured
 - Steps to reproduce
 - Logs
