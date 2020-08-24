@@ -5,6 +5,13 @@
 - Add hostname configuration (replace nmtui)
 - Better service configuration (deeper menu)
 - System check
+- Touch screen calibration
+
+## Frontend
+- Separate frontend from pi account
+
+## Nginx
+- Add HTTP basic auth (especially to MJPG)
 
 ## Misc
 - More security

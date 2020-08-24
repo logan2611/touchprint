@@ -1,6 +1,15 @@
 #!/bin/bash
-if [[ "$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=nokey=1:noprint_wrappers=1 /dev/video0)" == "h264" ]]; then
-  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -input_format h264 -i /dev/video0 -c:v h264_v4l2m2m -f mpjpeg -
+
+# Include environment variables
+source /usr/local/etc/mjpg-server/config.sh
+
+# Test if camera can just give us MJPG frames so that we can save a bunch of CPU
+if ffmpeg -input_format mjpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -nostats -v quiet -i $VIDEO_DEVICE vframes 1 -f null - >/dev/null; then
+  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -input_format mjpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -i $VIDEO_DEVICE -f mjpeg -c:v copy - 
+# Oh, it can't :( Guess I'll just blast the CPU to maybe get 5FPS
+elif ffmpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -nostats -v quiet -i $VIDEO_DEVICE -vframes 1 -f null - >/dev/null; then  
+  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -i /dev/video0 -f mjpeg -
 else
-  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -i /dev/video0 -f mpjpeg -
+  echo "FFmpeg could not start. Double check your configuration."
+  exit 1
 fi

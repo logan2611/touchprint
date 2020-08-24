@@ -64,7 +64,7 @@ suggested_menu () {
   done
 }
 
-dialog --title "NOTICE" --nocancel --colors --msgbox "This collection of software is currently in alpha. It is lacking several critical features. \Zb\Z1DO NOT\Zn use this in a production environment. This image has been provided for testing purposes only." 10 50
+dialog --title "NOTICE" --nocancel --colors --msgbox "This collection of software is currently in beta. It is lacking several critical features. \Zb\Z1DO NOT\Zn use this in a production environment." 10 50
 
 # Force the user to change the pi user's password before the RPi gets botnetted
 change_password 
