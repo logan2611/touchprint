@@ -2,11 +2,22 @@
 TouchPrint is a lightweight fork of Raspberry Pi OS whos purpose is to host OctoPrint and to display it on a connected screen.
 TouchPrint is very customizable, and both the GUI and/or OctoPrint can be disabled if you already have an existing setup to perform those tasks.
 
+# Table of Contents
+- [Screenshots](#screenshots)
+- [Requirements](#requirements)
+- [Quick Setup Guide](#quick-setup-guide)
+  - [Flashing on Windows/Mac OS/Linux \(Easy\)](#flashing-on-windowsmac-oslinux-easy)
+  - [Flashing on Mac OS/Linux/BSD \(Recommended\)](#flashing-in-mac-oslinuxbsd-recommended)
+  - [First Boot](#first-boot)
+  - [OctoPrint Setup](#octoprint-setup)
+  - [Accessing OctoPrint](#accessing-octoprint)
+  - [Configuring TouchPrint](#configuring-touchprint)
+- [Reporting Bugs](#reporting-bugs)
 
-## Screenshots
+# Screenshots
 TODO
 
-## Requirements
+# Requirements
 ### Minimum:
 - Raspberry Pi 3
 - 8GB microSD card
@@ -17,7 +28,7 @@ TODO
 - 8GB Class 10 microSD card
 - Keyboard and video for first time setup
 
-## Quick Setup Guide
+# Quick Setup Guide
 ### Flashing on Windows/Mac OS/Linux (Easy)
 1. Download and install [balenaEtcher](https://www.balena.io/etcher/).
 2. Download the [latest image from the releases section](/releases).
@@ -46,14 +57,19 @@ TODO
 ### OctoPrint Setup
 - If the GUI is enabled, you can setup OctoPrint on the Raspberry Pi. You can also setup OctoPrint by opening up a web browser on another computer and navigating to `https://RPI-IP`, replacing RPI-IP with the IP address of your Raspberry Pi.
 - If MJPG-Streamer is enabled, you can put `/webcam` into the Stream URL box to enable it in OctoPrint.
+- If you wish to enable timelapses, the path to ffmpeg is `/usr/bin/ffmpeg`.
 
 ### Accessing OctoPrint
 - If OctoPrint is enabled, you can access it at `https://RPI-IP`, replacing RPI-IP with the IP address of your Raspberry Pi.
 
-### Reporting Bugs
+### Configuring TouchPrint
+- TouchPrint can be configured either over SSH or in a TTY using the `octo-config` script. This script is provided to make management of core features easier and to consolidate TouchPrint's settings into one place.
+- OctoPrint can be configured through the OctoPrint UI as normal.
+
+# Reporting Bugs
 Please report any bugs by [filing an issue](/issues). Please include as much detail as you can, including (but not limited to):
 - Raspberry Pi Model
 - Version of TouchPrint
-- What you were doing when the bug occured
+- What you were doing when the bug/issue occured
 - Steps to reproduce
 - Logs
