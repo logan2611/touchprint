@@ -67,7 +67,10 @@ suggested_menu () {
 dialog --title "NOTICE" --nocancel --colors --msgbox "This collection of software is currently in beta. It is lacking several critical features. \Zb\Z1DO NOT\Zn use this in a production environment." 10 50
 
 # Force the user to change the pi user's password before the RPi gets botnetted
-change_password 
+change_password
+# Randomize the root and frontend password
+echo "kiosk:$(cat /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c40)" | chpasswd 
+echo "root:$(cat /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c40)" | chpasswd
 
 dialog --title "Network Configuration" --nocancel --msgbox "Setup will now open nmtui, a program to help configure your ethernet/wireless interfaces. Hit Quit when you are done." 10 50
 nmtui
@@ -76,9 +79,13 @@ nmtui
 dpkg-reconfigure tzdata
 
 # Enable/disable OctoPrint, GUI, MJPG and SSH
-service_select 
+service_toggle 
 
 screen_timeout
+
+if ( udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN=1 >/dev/null ) && dialog --title "Touchscreen Calibration" --defaultno --yesno "Do you wish to calibrate your touchscreen?\nMost touchscreens are calibrated out of the factory, so this is usually not needed." 10 60; then
+  startx $(which xinput_calibrator) --no-timeout --output-filename /etc/X11/xorg.conf.d/99-calibration.conf 
+fi 
 
 # Makes a certificate and key for Nginx HTTPS
 openssl req -x509 -nodes -days 36500 -newkey rsa:4096 -subj "/C=/ST=/L=/O=/OU=/CN=*/emailAddress=" -out /etc/ssl/certs/nginx-octoprint.crt -keyout /etc/ssl/private/nginx-octoprint.key
@@ -90,6 +97,7 @@ fi
 
 # If MJPG service is enabled, ask user which video device to use
 if [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then
+  video_select
   video_config
 fi
 

@@ -19,7 +19,7 @@ change_password () {
   unset PASSWORD
 }
 
-service_select () {
+service_toggle () {
   # Toggle the checkboxes if the service is active or not
   local SERVICE_MENU=$(dialog --separate-output --nocancel --title "Select services" --checklist "Enable/disable services" 0 0 0 \
     "1" "OctoPrint" $(if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]]; then echo "ON"; else echo "OFF"; fi) \
@@ -69,7 +69,6 @@ service_select () {
     systemctl disable ssh
   fi
 
-
 << 'EOF'
   for ((i = 0; i <= 3; i++)); do
     for n in "${SERVICE_MENU[@]}"; do
@@ -91,9 +90,12 @@ service_select () {
 EOF
 }
 
-screen_timeout() {
+screen_timeout () {
   local TIMEOUT=$(dialog --nocancel --title "Screen Timeout" --inputbox "Input your desired screen timeout in seconds.\nEnter \"off\" to disable the screen timeout.\n\nAdding a screen timeout can reduce screen burn in.\n\nDefault: off" 12 60 "off" 3>&1 1>&2 2>&3) 
-  cat > /home/pi/.xtimeout << EOF
+  
+  [[ "$TIMEOUT" == "" ]] && return 0
+
+  cat > /home/kiosk/.xtimeout << EOF
     xset s ${TIMEOUT}
     xset -dpms 
 EOF
@@ -104,23 +106,28 @@ nginx_config () {
   
   # Grab the variable from the nginx conf if it exists, otherwise use default
   if [[ -f /etc/nginx/listen.conf ]]; then
-    LISTEN=$(grep -i listen /etc/nginx/listen.conf | awk '{gsub(";",""); print $2}')
+    LISTEN=$(awk '/listen/{gsub(";",""); print $2}' /etc/nginx/listen.conf) 
   else
     LISTEN="443"
   fi
   
   LISTEN=$(dialog --title "Nginx Config" --nocancel --inputbox "Configure what port and IP Nginx should listen on.\nTo listen on all IPs, just enter the port.\nDefault: 443" 11 50 "$LISTEN" 3>&1 1>&2 2>&3)
 
+  [[ "$LISTEN" == "" ]] && return 0
+
   # Write new value to nginx
   echo "listen $LISTEN;" > /etc/nginx/listen.conf
 }
   
-video_config () {
+video_select () {
   # In the unlikely event that there are no video devices, don't continue
   if ! ls /dev/video* 2>&1 >/dev/null; then
     dialog --title "Error" --msgbox "No video devices detected!" 10 50
     return 1
   fi
+
+  # Grab config values
+  source /usr/local/etc/mjpg-server/config.sh 
 
   # Grab all video devices
   local DEVICES=($(ls /dev/video*))
@@ -129,13 +136,41 @@ video_config () {
 
   # Generate a menu from said video devices
   for ((i = 0; i < ${#DEVICES[@]}; i++)); do
-    DEVICELIST+="${DEVICES[$i]} $i OFF "
+    if [[ "$VIDEO_DEVICE" == ${DEVICES[$i]} ]]; then
+      DEVICELIST+="${DEVICES[$i]} $i ON "
+    else
+      DEVICELIST+="${DEVICES[$i]} $i OFF "
+    fi
   done
 
-  local DEVICE_MENU=$(dialog --title "Video Config" --nocancel --radiolist "Choose which video device you wish to use for MJPG-Streamer" 10 50 0 $DEVICELIST 3>&1 1>&2 2>&3)
+  local DEVICE_MENU=$(dialog --title "MJPG Config" --nocancel --radiolist "Choose which video device you wish to use for MJPG-Streamer" 10 50 0 $DEVICELIST 3>&1 1>&2 2>&3)
   
   [[ "$DEVICE_MENU" == "" ]] && return 0
  
-  # Write selected value to startup script
-  echo -e '#!/bin/bash'"\n/usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -i $DEVICE_MENU -f v4l2 -f mpjpeg -" > /usr/local/bin/start-mjpg
+  # Write selected value to config file 
+  echo -e "VIDEO_DEVICE=$DEVICE_MENU\nVIDEO_SIZE=$VIDEO_SIZE\nFRAMERATE=$FRAMERATE" > /usr/local/etc/mjpg-server/config.sh 
+}
+
+video_config () {
+  # Include config values
+  source /usr/local/etc/mjpg-server/config.sh
+
+  # Set video device to a resonable default if it isn't set for some reason
+  if [[ "$VIDEO_DEVICE" == "" ]]; then
+    VIDEO_DEVICE="/dev/video0"
+  fi  
+
+  local VIDEOCONFIG_MENU=$(dialog --nocancel --title "MJPG Config" --form "Choose desired camera resolution and framerate." 10 50 0\
+    "Resolution: " 1 1 "$VIDEO_SIZE" 1 13 10 0 \
+    "Framerate: " 2 1 "$FRAMERATE" 2 12 3 0 3>&1 1>&2 2>&3)
+  VIDEOCONFIG_MENU=($VIDEOCONFIG_MENU)
+
+  if [[ "$VIDEOCONFIG_MENU[0]" == "" ]] || [[ "$VIDEOCONFIG_MENU[1]" == "" ]]; then
+    dialog --title "Error" --msgbox "Invalid input!" 10 50
+    video_config
+    return 0
+  fi
+
+  # Write values to config file 
+  echo -e "VIDEO_DEVICE=$VIDEO_DEVICE\nVIDEO_SIZE=${VIDEOCONFIG_MENU[0]}\nFRAMERATE=${VIDEOCONFIG_MENU[1]}" > /usr/local/etc/mjpg-server/config.sh 
 }

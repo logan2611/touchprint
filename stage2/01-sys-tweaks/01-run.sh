@@ -46,6 +46,9 @@ done
 for GRP in dialout plugdev video users; do
   adduser octoprint \$GRP
 done
+for GRP in users; do
+  adduser kiosk \$GRP
+done
 EOF
 
 on_chroot << EOF

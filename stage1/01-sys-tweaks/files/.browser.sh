@@ -1,25 +1,25 @@
 #!/bin/bash
 
 # Grabs the port (and IP) out of the nginx config
-LISTEN=$(grep -i listen /etc/nginx/listen.conf | awk '{gsub(";",""); print $2}')
+LISTEN=$(awk '/listen/{gsub(";",""); print $2}' /etc/nginx/listen.conf)
 
 # If the value we just grabbed doesn't contain an IP, prepend localhost
 if ! echo $LISTEN | grep ":" 2>&1; then
-  ADDRESS="localhost:$LISTEN"
+  ADDRESS="https://localhost:$LISTEN"
 else
-  ADDRESS=$LISTEN
+  ADDRESS="https://$LISTEN"
 fi
 
 # Override the automatically detected address if the user wants to
 if [[ -f ~/.overrideurl.sh ]]; then source ~/.overrideurl.sh; fi
 
 # Wait until Nginx/override comes up
-while ! curl "$ADDRESS" 2>&1 >/dev/null; do
+while ! curl -f -k -s -I "$ADDRESS" 2>&1 >/dev/null; do
   sleep 1
 done
 
 # Wait until OctoPrint comes up if it is enabled
-while [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && ! curl "localhost:5000"; do
+while [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && ! curl -f -s -I "localhost:5000"; do
   sleep 1
 done
 
@@ -31,4 +31,4 @@ done
 # -K | Enable kiosk mode (doesn't seem to do anything?)
 # -n | Disable web inspector
 # -p | Disable plugins
-surf -t -F -g -K -n -p "https://$ADDRESS"
+surf -t -F -g -K -n -p "$ADDRESS"
