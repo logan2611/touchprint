@@ -103,7 +103,8 @@ screen_timeout () {
 
   cat > /home/kiosk/.xtimeout << EOF
     xset s ${TIMEOUT}
-    xset -dpms 
+    xset -dpms
+    xset s noblank 
 EOF
 }
 
