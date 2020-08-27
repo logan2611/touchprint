@@ -22,7 +22,10 @@ main_menu () {
     "2") change_password; main_menu; return 0;;
     "3") services_menu; main_menu; return 0;;
     "4") screen_timeout; main_menu; return 0;;
-    "5") dialog --title "Touchscreen Calibration" --infobox "Waiting for touchscreen calibrator to close..." 3 50; DISPLAY=:0 xinput_calibrator --no-timeout --output-filename /etc/X11/xorg.conf.d/99-calibration.conf; main_menu; return 0;;
+    "5") dialog --title "Touchscreen Calibration" --infobox "Waiting for touchscreen calibrator to close..." 3 50; 
+      DISPLAY=:0 xinput_calibrator --no-timeout --output-filename /etc/X11/xorg.conf.d/99-calibration.conf; 
+      main_menu; 
+      return 0;;
     "6") return 0;;
   esac 
 }
@@ -38,7 +41,7 @@ services_menu () {
   case $SERVICESMENU in
     "1") service_toggle; services_menu; return 0;;
     "2") service_health; services_menu; return 0;;
-    "3") nginx_config; services_menu; return 0;;
+    "3") nginx_menu; services_menu; return 0;;
     "4") video_menu; services_menu; return 0;;
     "5") return 0;;
   esac 
@@ -65,6 +68,19 @@ service_health () {
 \ZnMJPG:      \Zb$(if curl -s -I 127.0.0.1:9000 >/dev/null; then echo '\Z2Online'; elif [[ ! -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then echo "Disabled"; else echo '\Z1Offline'; fi)
 \ZnNginx:     \Zb$(if curl -k -s -I https://$ADDRESS >/dev/null; then echo '\Z2Online'; elif [[ ! -f /etc/systemd/system/multi-user.target.wants/nginx.service ]]; then echo "Disabled"; else echo '\Z1Offline'; fi)
 \ZnSSH:       \Zb$(if pgrep sshd >/dev/null; then echo '\Z2Online'; elif [[ ! -f /etc/systemd/system/multi-user.target.wants/sshd.service ]]; then echo "Disabled"; else echo '\Z1Offline'; fi)" 0 0
+}
+
+nginx_menu () {
+  local NGINXMENU=$(dialog --title "Nginx Config" --menu "" 10 50 0 \
+    "1" "Listening Settings" \
+    "2" "MJPG Authentication" \
+    "3" "Go Back" 3>&1 1>&2 2>&3)
+
+  case $NGINXMENU in
+    "1") nginx_listen; nginx_menu; return 0;;
+    "2") nginx_auth; nginx_menu; return 0;;
+    "3") return 0;;
+  esac
 }
 
 video_menu () {

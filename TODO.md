@@ -4,9 +4,6 @@
 - Add network configuration (replace nmtui)
 - Add hostname configuration (replace nmtui)
 
-## Nginx
-- Add HTTP basic auth (especially to MJPG)
-
 ## Misc
 - More security
 - Wiki

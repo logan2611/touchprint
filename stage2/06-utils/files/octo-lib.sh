@@ -57,6 +57,12 @@ service_toggle () {
     raspi-config nonint do_camera 1 # Disables the camera
   fi
 
+  if [[ $ENABLE_OCTO == true ]] && [[ $ENABLE_MJPG == true ]]; then
+    systemctl enable nginx
+  elif [[ $ENABLE_OCTO == false ]] && [[ $ENABLE_MJPG == false ]]; then
+    systemctl disable nginx
+  fi
+
   if [[ $ENABLE_GUI == true ]]; then
     systemctl set-default graphical.target 
   else
@@ -101,7 +107,7 @@ screen_timeout () {
 EOF
 }
 
-nginx_config () {
+nginx_listen () {
   local LISTEN=""
   
   # Grab the variable from the nginx conf if it exists, otherwise use default
@@ -118,7 +124,38 @@ nginx_config () {
   # Write new value to nginx
   echo "listen $LISTEN;" > /etc/nginx/listen.conf
 }
-  
+
+nginx_auth () {
+  local NGINXAUTH_MENU=$(dialog --colors --nocancel --insecure --title "Nginx Config" --mixedform "Input desired username and password for the MJPG stream.\n\nLeave both fields blank if you do not want authentication \Zb\Z1(NOT RECOMMENDED)\Zn." 12 60 0\
+    "Username: " 1 1 "" 1 11 10 0 0 \
+    "Password: " 2 1 "" 2 11 30 0 1 3>&1 1>&2 2>&3 || return 0)
+  NGINXAUTH_MENU=($NGINXAUTH_MENU)
+
+  # If all the fields are blank, remove the auth stuff and exit
+  if [[ "${NGINXAUTH_MENU[*]}" == "" ]]; then
+    echo "" > /etc/nginx/auth.conf
+    rm /etc/nginx/.htpasswd
+    return 0
+  fi
+
+  # If only one of them is blank, make the user start over
+  if [[ ${NGINXAUTH_MENU[0]} == "" ]] || [[ ${NGINXAUTH_MENU[1]} == "" ]]; then
+    dialog --title "Error" --msgbox "Invalid input!" 10 50
+    nginx_auth
+    return 0
+  fi
+
+  # Write the auth config and password file to Nginx
+  echo -e "satisfy any;\nallow 127.0.0.1;\ndeny all;\nauth_basic \"TouchPrint MJPG Stream\";\nauth_basic_user_file /etc/nginx/.htpasswd;" > /etc/nginx/auth.conf
+  #htpasswd -b -B -c /etc/nginx/.htpasswd ${NGINXAUTH_MENU[0]} ${NGINXAUTH_MENU[1]}
+  echo "${NGINXAUTH_MENU[0]}:$(openssl passwd -apr1 ${NGINXAUTH_MENU[1]})" > /etc/nginx/.htpasswd
+  unset NGINXAUTH_MENU
+
+  # Set perms so that no one steals our precious password hashes
+  chown root:www-data /etc/nginx/.htpasswd
+  chmod 640 /etc/nginx/.htpasswd
+}
+
 video_select () {
   # In the unlikely event that there are no video devices, don't continue
   if ! ls /dev/video* 2>&1 >/dev/null; then
@@ -165,7 +202,7 @@ video_config () {
     "Framerate: " 2 1 "$FRAMERATE" 2 12 3 0 3>&1 1>&2 2>&3)
   VIDEOCONFIG_MENU=($VIDEOCONFIG_MENU)
 
-  if [[ "$VIDEOCONFIG_MENU[0]" == "" ]] || [[ "$VIDEOCONFIG_MENU[1]" == "" ]]; then
+  if [[ "${VIDEOCONFIG_MENU[0]}" == "" ]] || [[ "${VIDEOCONFIG_MENU[1]}" == "" ]]; then
     dialog --title "Error" --msgbox "Invalid input!" 10 50
     video_config
     return 0

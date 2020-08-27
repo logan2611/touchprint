@@ -69,7 +69,6 @@ dialog --title "NOTICE" --nocancel --colors --msgbox "This collection of softwar
 # Force the user to change the pi user's password before the RPi gets botnetted
 change_password
 # Randomize the root and frontend password
-echo "kiosk:$(cat /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c40)" | chpasswd 
 echo "root:$(cat /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c40)" | chpasswd
 
 dialog --title "Network Configuration" --nocancel --msgbox "Setup will now open nmtui, a program to help configure your ethernet/wireless interfaces. Hit Quit when you are done." 10 50
@@ -92,11 +91,12 @@ openssl req -x509 -nodes -days 36500 -newkey rsa:4096 -subj "/C=/ST=/L=/O=/OU=/C
 
 # If OctoPrint/MJPG Streamer is running locally, ask if the user wants to change the default listening port/IP (optional)
 if ( [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] || [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]] ) && dialog --title "Nginx Config" --defaultno --yesno "Do you wish to change the default Nginx listening address and/or port?" 10 60; then
-  nginx_config
+  nginx_listen
 fi
 
-# If MJPG service is enabled, ask user which video device to use
+# If MJPG service is enabled, ask the user to configure Nginx basic auth and the video device
 if [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then
+  nginx_auth
   video_select
   video_config
 fi
@@ -111,4 +111,7 @@ fi
 # Delete the autologin override and first-time setup utility
 rm /etc/systemd/system/getty@tty1.service.d/override.conf 
 rm /etc/profile.d/first-time.sh
+
+dialog --title "TouchPrint Config" --infobox "Rebooting..." 0 0
+sleep 1
 reboot

@@ -66,3 +66,4 @@ max_framebuffers=2
 [all]
 #dtoverlay=vc4-fkms-v3d
 arm_64bit=1
+start_x=1

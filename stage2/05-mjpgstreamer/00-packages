@@ -1,6 +1,2 @@
-cmake
 libjpeg-dev
-v4l-utils
 libv4l-dev
-gcc
-g++

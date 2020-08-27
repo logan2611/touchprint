@@ -1,0 +1,10 @@
+webcam:
+  stream: /webcam/
+  ffmpeg: /usr/bin/ffmpeg
+  discovery:
+    publicPort: 443
+server:
+  commands:
+    systemShutdownCommand: sudo shutdown now
+    systemRestartCommand: sudo shutdown -r now
+    serverRestartCommand: sudo restart-octoprint 
