@@ -112,6 +112,7 @@ if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && dia
   recommended_menu || return 1
   suggested_menu || return 1
   chown -R octoprint:octoprint /srv/octoprint
+  chown -R octoprint:octoprint /home/octoprint
 fi
 
 # Delete the autologin override and first-time setup utility
