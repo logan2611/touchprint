@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+import yaml
+import sys
+
+def loadConfig(path):
+    with open(path, 'r') as f:
+        return yaml.full_load(f)
+
+def writeConfig(path, config):
+    with open(path, 'w') as f:
+        return yaml.dump(config, f) 
+
+
+def getValue(config, args):
+    cur = config
+    for arg in args:
+        if arg not in cur.keys():
+            return
+        else:
+            cur = cur[arg]
+
+    return cur
+
+def setValue(config, args, value):
+    cur = config
+    for arg in args[:-1]:
+        if arg not in cur.keys():
+            cur[arg] = {}
+        cur = cur[arg]
+
+    cur[args[-1]] = value
+
+if __name__ == '__main__':
+    if len(sys.argv) > 2:
+        config = loadConfig(r'/home/octoprint/.octoprint/config.yaml')  
+        if sys.argv[1] == 'read':
+            print(getValue(config, sys.argv[2:]))
+        elif sys.argv[1] == 'write':
+            print(sys.argv[2:-1]) 
+            print(sys.argv[-1])
+            setValue(config, sys.argv[2:-1], sys.argv[-1])
+            writeConfig(r'/home/octoprint/.octoprint/config.yaml', config)
+    else:
+        print('Octo-Settings v1 - A command line utility to change and read OctoPrint\'s settings.')
+        print('')
+        print('Usage: ', sys.argv[0], 'read [KEY1] [KEY2] ...')
+        print('       ', sys.argv[0], 'write [KEY1] [KEY2] ... [VALUE]') 
+
+

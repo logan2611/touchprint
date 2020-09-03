@@ -63,7 +63,7 @@ TODO
 - If OctoPrint is enabled, you can access it at `https://RPI-IP`, replacing RPI-IP with the IP address of your Raspberry Pi.
 
 ### Configuring TouchPrint
-- TouchPrint can be configured either over SSH or in a TTY using the `octo-config` script. This script is provided to make management of core features easier and to consolidate TouchPrint's settings into one place.
+- TouchPrint can be configured either over SSH or in a TTY using the `tp-config` script. This script is provided to make management of core features easier and to consolidate TouchPrint's settings into one place.
 - OctoPrint can be configured through the OctoPrint UI as normal.
 
 # Reporting Bugs

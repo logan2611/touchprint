@@ -2,20 +2,23 @@ change_password () {
   local PASSWORD="$(dialog --title "Change Password" --nocancel --insecure --passwordbox "Enter new password for user \"pi\"" 10 50 3>&1 1>&2 2>&3)"
   # If the password field was left blank, exit
   if [[ $? -ne 0 ]] || [[ $PASSWORD == "" ]]; then return 1; fi
+  
   # If the password is raspberry, tell the user he is an idiot
   if [[ "$PASSWORD" == "raspberry" ]]; then
     dialog --title "Change Password" --nocancel --msgbox "That password sucks. Please use a different one :)" 10 50
     change_password
     return 0
   fi
+
   if [[ "$(dialog --nocancel --insecure --passwordbox "Confirm new password for user \"pi\"" 10 50 3>&1 1>&2 2>&3)" == "$PASSWORD" ]]; then
     if [[ $? != 0 ]]; then return 1; fi 
     echo -e "pi:$PASSWORD" | chpasswd
   else
-    dialog --title "Change Password" --nocancel --msgbox "Passwords did not match!" 10 50
+    dialog --title "Change Password" --nocancel --colors --msgbox "\Z1\ZbPasswords did not match!" 5 30
     change_password
     return 0
   fi
+
   unset PASSWORD
 }
 
@@ -75,6 +78,8 @@ service_toggle () {
     systemctl disable ssh
   fi
 
+  ASK_REBOOT=true
+
 << 'EOF'
   for ((i = 0; i <= 3; i++)); do
     for n in "${SERVICE_MENU[@]}"; do
@@ -106,6 +111,19 @@ screen_timeout () {
     xset -dpms
     xset s noblank 
 EOF
+
+  if [[ $(readlink -f /etc/systemd/system/default.target) == "/usr/lib/systemd/system/graphical.target" ]]; then 
+    ASK_REBOOT=true
+  fi
+}
+
+octo_autologin () {
+  local AUTOLOGIN_MENU="$(dialog --title "OctoPrint AutoLogin" --nocancel --inputbox "Enter the username of the user that you want the GUI to autologin as on startup." 10 50 $(octo-settings read accessControl autologinAs) 3>&1 1>&2 2>&3)"
+  octo-settings write accessControl autologinAs $AUTOLOGIN_MENU
+  
+  if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]]; then
+    systemctl restart octoprint
+  fi
 }
 
 nginx_listen () {
@@ -124,6 +142,11 @@ nginx_listen () {
 
   # Write new value to nginx
   echo "listen $LISTEN;" > /etc/nginx/listen.conf
+  
+  if [[ -f /etc/systemd/system/multi-user.target.wants/nginx.service ]]; then
+    systemctl restart nginx
+    ASK_REBOOT=true
+  fi
 }
 
 nginx_auth () {
@@ -141,7 +164,7 @@ nginx_auth () {
 
   # If only one of them is blank, make the user start over
   if [[ ${NGINXAUTH_MENU[0]} == "" ]] || [[ ${NGINXAUTH_MENU[1]} == "" ]]; then
-    dialog --title "Error" --msgbox "Invalid input!" 10 50
+    dialog --title "Nginx Config" --colors --msgbox "\Z1\ZbInvalid input!" 5 20
     nginx_auth
     return 0
   fi
@@ -155,12 +178,16 @@ nginx_auth () {
   # Set perms so that no one steals our precious password hashes
   chown root:www-data /etc/nginx/.htpasswd
   chmod 640 /etc/nginx/.htpasswd
+  
+  if [[ -f /etc/systemd/system/multi-user.target.wants/nginx.service ]]; then
+    systemctl restart nginx
+  fi
 }
 
 video_select () {
   # In the unlikely event that there are no video devices, don't continue
   if ! ls /dev/video* 2>&1 >/dev/null; then
-    dialog --title "Error" --msgbox "No video devices detected!" 10 50
+    dialog --title "Video Config" --colors --msgbox "\Z1\ZbNo video devices detected!" 5 30
     return 1
   fi
 
@@ -186,7 +213,11 @@ video_select () {
   [[ "$DEVICE_MENU" == "" ]] && return 0
  
   # Write selected value to config file 
-  echo -e "VIDEO_DEVICE=$DEVICE_MENU\nVIDEO_SIZE=$VIDEO_SIZE\nFRAMERATE=$FRAMERATE" > /usr/local/etc/mjpg-server/config.sh 
+  echo -e "VIDEO_DEVICE=$DEVICE_MENU\nVIDEO_SIZE=$VIDEO_SIZE\nFRAMERATE=$FRAMERATE" > /usr/local/etc/mjpg-server/config.sh
+  
+  if [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then
+    systemctl restart mjpg-streamer
+  fi
 }
 
 video_config () {
@@ -211,4 +242,8 @@ video_config () {
 
   # Write values to config file 
   echo -e "VIDEO_DEVICE=$VIDEO_DEVICE\nVIDEO_SIZE=${VIDEOCONFIG_MENU[0]}\nFRAMERATE=${VIDEOCONFIG_MENU[1]}" > /usr/local/etc/mjpg-server/config.sh 
+
+  if [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then
+    systemctl restart mjpg-streamer
+  fi
 }

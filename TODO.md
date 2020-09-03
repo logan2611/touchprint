@@ -1,8 +1,9 @@
 # TODO:
 
-## First time/Octo-Config
+## First time/TP-Config
 - Add network configuration (replace nmtui)
 - Add hostname configuration (replace nmtui)
+- Add Enclosure plugin to suggested
 
 ## Misc
 - More security

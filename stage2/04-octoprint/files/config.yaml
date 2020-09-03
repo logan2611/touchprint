@@ -1,3 +1,7 @@
+accessControl:
+  autologinLocal: true
+  localNetworks:
+    - 127.0.0.0/8 
 webcam:
   stream: /webcam/
   ffmpeg: /usr/bin/ffmpeg
