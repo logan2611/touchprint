@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 mkdir -p "${ROOTFS_DIR}/usr/local/bin/"
 install -m 755 files/octo-config "${ROOTFS_DIR}/usr/local/bin/octo-config"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This should never happen, no harm in checking though ;)
 if [ "$EUID" -ne 0 ]; then 

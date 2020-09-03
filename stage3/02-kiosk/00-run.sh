@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 mkdir -p "${ROOTFS_DIR}/home/kiosk"
 install -m 755 files/.xprofile "${ROOTFS_DIR}/home/kiosk/.xprofile"

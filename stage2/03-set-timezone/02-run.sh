@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 echo "${TIMEZONE_DEFAULT}" > "${ROOTFS_DIR}/etc/timezone"
 rm "${ROOTFS_DIR}/etc/localtime"

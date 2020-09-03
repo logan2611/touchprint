@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 install -m 644 files/sources.list "${ROOTFS_DIR}/etc/apt/"
 install -m 644 files/raspi.list "${ROOTFS_DIR}/etc/apt/sources.list.d/"

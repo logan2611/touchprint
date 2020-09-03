@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 install -m 755 files/resize2fs_once	"${ROOTFS_DIR}/etc/init.d/"
 

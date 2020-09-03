@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Include environment variables
 source /usr/local/etc/mjpg-server/config.sh

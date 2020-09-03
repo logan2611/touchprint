@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 # shellcheck disable=SC2119
 run_sub_stage()
 {

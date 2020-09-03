@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 install -m 644 files/mjpg-streamer.service ${ROOTFS_DIR}/etc/systemd/system/mjpg-streamer.service
 install -m 755 files/start-mjpg ${ROOTFS_DIR}/usr/local/bin/start-mjpg

@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -e
 
 mkdir -p ${ROOTFS_DIR}/etc/default
 install -m 644 files/nodm ${ROOTFS_DIR}/etc/default/nodm
