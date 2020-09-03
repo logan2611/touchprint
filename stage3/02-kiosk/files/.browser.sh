@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Deletes cookies
+rm ~/.surf/cookies.txt
+
 # Grabs the port (and IP) out of the nginx config
 LISTEN=$(awk '/listen/{gsub(";",""); print $2}' /etc/nginx/listen.conf)
 
