@@ -4,8 +4,10 @@
 - Add network configuration (replace nmtui)
 - Add hostname configuration (replace nmtui)
 - Add Enclosure plugin to suggested
+- Bring back cancel buttons
 
 ## Misc
+- Cleanup
 - More security
 - Wiki
 

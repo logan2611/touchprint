@@ -7,6 +7,7 @@ install -m 600 files/config.yaml ${ROOTFS_DIR}/home/octoprint/.octoprint/config.
 
 install -m 644 files/nginx.conf ${ROOTFS_DIR}/etc/nginx/nginx.conf
 echo -e "listen 443;" > ${ROOTFS_DIR}/etc/nginx/listen.conf
+touch ${ROOTFS_DIR}/etc/nginx/auth.conf
 
 mkdir -p ${ROOTFS_DIR}/usr/local/bin 
 install -m 755 files/restart-octoprint ${ROOTFS_DIR}/usr/local/bin/restart-octoprint
