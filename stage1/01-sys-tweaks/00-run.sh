@@ -18,5 +18,4 @@ if ! id -u kiosk >/dev/null 2>&1; then
 	adduser --disabled-password --shell /usr/sbin/nologin --gecos "" kiosk 
 fi
 echo "${FIRST_USER_NAME}:${FIRST_USER_PASS}" | chpasswd
-echo "root:$(cat /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c40)" | chpasswd
 EOF
