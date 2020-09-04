@@ -7,6 +7,12 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+# Prevent Ctrl+C since you shouldn't be able to exit this
+trap '' SIGINT
+
+# Set the FIRST_TIME variable to disable cancel boxes
+FIRST_TIME="--nocancel"
+
 # Import common functions
 source /usr/local/lib/tp-lib.sh
 
@@ -21,58 +27,58 @@ error_install () {
 }
 
 recommended_menu () {
-  local RECOMMEND_MENU=$(dialog --nocancel --title "Plugin Manager | Recommended Plugins" --checklist "Check plugins that you wish to install." 0 0 0 \
+  local RECOMMEND_MENU=$(dialog --title "Plugin Manager | Recommended Plugins" --checklist "Check plugins that you wish to install." 0 0 0 \
   "OctoPrint-Dashboard" "Adds a nice dashboard to OctoPrint." ON \
   "ExcludeRegion" "Select regions of the bed where you don't want to print." ON \
   "NavbarTemp" "Shows the temperature of the Pi, extruder(s) and bed in the navigation bar." ON \
   "PrintTimeGenius" "Provides more accurate print time estimates." ON \
   "HeaterTimeout" "Turns off the hotend and bed after a set amount of time." ON \
-  "TouchUI" "Makes the UI easier to use on touchscreens. Also adds a virtual keyboard." ON 3>&1 1>&2 2>&3)
+  "TouchUI" "Makes the UI easier to use on touchscreens. Also adds a virtual keyboard." ON 3>&1 1>&2 2>&3 || return 0)
 
   RECOMMEND_MENU=($RECOMMEND_MENU)
    
   for ((i = 0; i < ${#RECOMMEND_MENU[@]}; i++)); do
     echo $(( $i * 100 / ${#RECOMMEND_MENU[@]} )) | dialog --title "Plugin Manager" --gauge "Installing ${RECOMMEND_MENU[$i]}" 10 50
     case ${RECOMMEND_MENU[$i]} in
-      "OctoPrint-Dashboard") install_package "https://github.com/StefanCohen/OctoPrint-Dashboard/archive/master.zip" || error_install "OctoPrint-Dashboard"; install_package "https://github.com/OllisGit/OctoPrint-DisplayLayerProgress/releases/latest/download/master.zip" || error_install "OctoPrint-Dashboard";;
-      "ExcludeRegion") install_package "https://github.com/bradcfisher/OctoPrint-ExcludeRegionPlugin/archive/master.zip" || error_install "ExcludeRegion";;
-      "NavbarTemp") install_package "https://github.com/imrahil/OctoPrint-NavbarTemp/archive/master.zip" || error_install "NavbarTemp";;
-      "PrintTimeGenius") install_package "https://github.com/eyal0/OctoPrint-PrintTimeGenius/archive/master.zip" || error_install "PrintTimeGenius";;
-      "HeaterTimeout") install_package "https://github.com/google/OctoPrint-HeaterTimeout/archive/master.zip" || error_install "HeaterTimeout";;  
-      "TouchUI") install_package "https://github.com/BillyBlaze/OctoPrint-TouchUI/archive/master.zip" || error_install "TouchUI";;
+      "OctoPrint-Dashboard") install_package "https://github.com/StefanCohen/OctoPrint-Dashboard/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]}; install_package "https://github.com/OllisGit/OctoPrint-DisplayLayerProgress/releases/latest/download/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
+      "ExcludeRegion") install_package "https://github.com/bradcfisher/OctoPrint-ExcludeRegionPlugin/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
+      "NavbarTemp") install_package "https://github.com/imrahil/OctoPrint-NavbarTemp/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
+      "PrintTimeGenius") install_package "https://github.com/eyal0/OctoPrint-PrintTimeGenius/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
+      "HeaterTimeout") install_package "https://github.com/google/OctoPrint-HeaterTimeout/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;  
+      "TouchUI") install_package "https://github.com/BillyBlaze/OctoPrint-TouchUI/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
     esac
   done
 }
 
 suggested_menu () {
-  local SUGGEST_MENU=$(dialog --nocancel --title "Plugin Manager | Suggested Plugins" --checklist "Check plugins that you wish to install.\n\nSome of these may conflict with the recommended plugins." 0 0 0 \
+  local SUGGEST_MENU=$(dialog --title "Plugin Manager | Suggested Plugins" --checklist "Check plugins that you wish to install.\n\nSome of these may conflict with the recommended plugins." 0 0 0 \
   "Themeify" "Adds theming supports and a few themes to OctoPrint." OFF \
   "Preheat" "Adds a preheat button to preheat the bed and extruder to the temperature set in the selected gcode file." OFF \
   "ConsolidatedTabs" "Allows you to combine several tabs into one larger tab with draggable and resizable panels." OFF \
-  "DetailedProgress" "Sends commands to your printer to display current printing progress." OFF 3>&1 1>&2 2>&3)
+  "DetailedProgress" "Sends commands to your printer to display current printing progress." OFF \
+  "Enclosure" "Adds a lot of features for enclosures such as support for external temperature sensors." OFF 3>&1 1>&2 2>&3 || return 0)
   
   SUGGEST_MENU=($SUGGEST_MENU)
    
   for ((i = 0; i < ${#SUGGEST_MENU[@]}; i++)); do
     echo $(( $i * 100 / ${#SUGGEST_MENU[@]} )) | dialog --title "Plugin Manager" --gauge "Installing ${SUGGEST_MENU[$i]}" 10 50
     case ${SUGGEST_MENU[$i]} in
-      "Themeify") install_package "https://github.com/birkbjo/OctoPrint-Themeify/archive/master.zip" || error_install "Themeify";;
-      "Preheat") install_package "https://github.com/marian42/octoprint-preheat/archive/master.zip" || error_install "Preheat";;
-      "ConsolidatedTabs") install_package "https://github.com/jneilliii/OctoPrint-ConsolidatedTabs/archive/master.zip" || error_install "ConsolidatedTabs";;
-      "DetailedProgress") install_package "https://github.com/tpmullan/OctoPrint-DetailedProgress/archive/master.zip" || error_install "DetailedProgress";;
+      "Themeify") install_package "https://github.com/birkbjo/OctoPrint-Themeify/archive/master.zip" || error_install ${SUGGEST_MENU[$i]};;
+      "Preheat") install_package "https://github.com/marian42/octoprint-preheat/archive/master.zip" || error_install ${SUGGEST_MENU[$i]};;
+      "ConsolidatedTabs") install_package "https://github.com/jneilliii/OctoPrint-ConsolidatedTabs/archive/master.zip" || error_install ${SUGGEST_MENU[$i]};;
+      "DetailedProgress") install_package "https://github.com/tpmullan/OctoPrint-DetailedProgress/archive/master.zip" || error_install ${SUGGEST_MENU[$i]};;
+      "Enclosure") install_package "https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip" || error_install ${SUGGEST_MENU[$i]};;
     esac
   done
 }
 
-dialog --title "NOTICE" --nocancel --colors --msgbox "This collection of software is currently in beta, it may contain several bugs. This software is \Zb\Z1NOT\Zn recommended for a production environment." 10 50
+dialog --title "NOTICE" --colors --msgbox "This collection of software is currently in beta, it may contain several bugs. This software is \Zb\Z1NOT\Zn recommended for a production environment." 10 50
 
 # Makes a certificate and key for Nginx HTTPS
 openssl req -x509 -nodes -days 36500 -newkey rsa:4096 -subj "/C=/ST=/L=/O=/OU=/CN=*/emailAddress=" -out /etc/ssl/certs/nginx-octoprint.crt -keyout /etc/ssl/private/nginx-octoprint.key
 
 # Force the user to change the pi user's password before the RPi gets botnetted
 change_password
-# Randomize the root password
-echo "root:$(cat /dev/urandom | tr -dc _A-Z-a-z-0-9 | head -c40)" | chpasswd
 
 dialog --title "Network Configuration" --nocancel --msgbox "Setup will now open nmtui, a program to help configure your ethernet/wireless interfaces. Hit Quit when you are done." 10 50
 nmtui
@@ -109,8 +115,7 @@ fi
 
 # If OctoPrint is running locally, ask if user wants to preinstall recommended plugins
 if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && dialog --title "Plugin Manager" --yesno "Do you wish to preinstall some suggested plugins?" 10 60; then 
-  recommended_menu || return 1
-  suggested_menu || return 1
+  recommended_menu && suggested_menu
   chown -R octoprint:octoprint /srv/octoprint
   chown -R octoprint:octoprint /home/octoprint
 fi

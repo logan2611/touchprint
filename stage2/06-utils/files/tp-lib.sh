@@ -1,20 +1,23 @@
 change_password () {
-  local PASSWORD="$(dialog --title "Change Password" --nocancel --insecure --passwordbox "Enter new password for user \"pi\"" 10 50 3>&1 1>&2 2>&3)"
-  # If the password field was left blank, exit
-  if [[ $? -ne 0 ]] || [[ $PASSWORD == "" ]]; then return 1; fi
+  local PASSWORD="$(dialog --title "Change Password" $FIRST_TIME --insecure --passwordbox "Enter new password for user \"pi\"" 10 50 3>&1 1>&2 2>&3 || return 0)"
+
+  # If the password field was left blank and we aren't in the first time setup, exit
+  [[ $PASSWORD == "" ]] && [[ $FIRST_TIME == "" ]] && return 0
+
+  # If we are in the first time setup and the password field is blank, make the user restart
+  [[ $PASSWORD == "" ]] && ! [[ $FIRST_TIME == "" ]] && change_password
   
   # If the password is raspberry, tell the user he is an idiot
   if [[ "$PASSWORD" == "raspberry" ]]; then
-    dialog --title "Change Password" --nocancel --msgbox "That password sucks. Please use a different one :)" 10 50
+    dialog --title "Change Password" --msgbox "That password sucks. Please use a different one :)" 10 50
     change_password
     return 0
   fi
 
-  if [[ "$(dialog --nocancel --insecure --passwordbox "Confirm new password for user \"pi\"" 10 50 3>&1 1>&2 2>&3)" == "$PASSWORD" ]]; then
-    if [[ $? != 0 ]]; then return 1; fi 
+  if [[ "$(dialog $FIRST_TIME --title "Change Password" --insecure --passwordbox "Confirm new password for user \"pi\"" 10 50 3>&1 1>&2 2>&3 || return 0)" == "$PASSWORD" ]]; then
     echo -e "pi:$PASSWORD" | chpasswd
   else
-    dialog --title "Change Password" --nocancel --colors --msgbox "\Z1\ZbPasswords did not match!" 5 30
+    dialog --title "Change Password" --colors --msgbox "\Z1\ZbPasswords did not match!" 5 30
     change_password
     return 0
   fi
@@ -24,11 +27,11 @@ change_password () {
 
 service_toggle () {
   # Toggle the checkboxes if the service is active or not
-  local SERVICE_MENU=$(dialog --separate-output --nocancel --title "Select services" --checklist "Enable/disable services" 0 0 0 \
+  local SERVICE_MENU=$(dialog $FIRST_TIME --title "Select services" --checklist "Enable/disable services" 0 0 0 \
     "1" "OctoPrint" $(if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]]; then echo "ON"; else echo "OFF"; fi) \
     "2" "MJPG-Streamer" $(if [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then echo "ON"; else echo "OFF"; fi) \
     "3" "GUI" $(if [[ $(systemctl get-default) == "graphical.target" ]]; then echo "ON"; else echo "OFF"; fi) \
-    "4" "SSH" $(if [[ -f /etc/systemd/system/multi-user.target.wants/ssh.service ]]; then echo "ON"; else echo "OFF"; fi) 3>&1 1>&2 2>&3)
+    "4" "SSH" $(if [[ -f /etc/systemd/system/multi-user.target.wants/ssh.service ]]; then echo "ON"; else echo "OFF"; fi) 3>&1 1>&2 2>&3 || return 0)
 
   SERVICE_MENU=($SERVICE_MENU)
 
@@ -46,39 +49,76 @@ service_toggle () {
     esac
   done
 
-  if [[ $ENABLE_OCTO == true ]]; then
-    systemctl enable octoprint
+  # If FIRST_TIME is not empty, this is the first time boot so don't actually start stuff, otherwise use normal behaviour
+  if ! [[ "$FIRST_TIME" == "" ]]; then
+    if [[ $ENABLE_OCTO == true ]]; then
+      systemctl enable octoprint
+    else
+      systemctl disable octoprint
+    fi
+
+    if [[ $ENABLE_MJPG == true ]]; then
+      systemctl enable mjpg-streamer
+      raspi-config nonint do_camera 0 # Counter intuitively enables the camera  
+    else
+      systemctl disable mjpg-streamer
+      raspi-config nonint do_camera 1 # Disables the camera
+    fi
+
+    if [[ $ENABLE_OCTO == true ]] && [[ $ENABLE_MJPG == true ]]; then
+      systemctl enable nginx
+    elif [[ $ENABLE_OCTO == false ]] && [[ $ENABLE_MJPG == false ]]; then
+      systemctl disable nginx
+    fi
+
+    if [[ $ENABLE_GUI == true ]]; then
+      systemctl set-default graphical.target 
+    else
+      systemctl set-default multi-user.target  
+    fi
+
+    if [[ $ENABLE_SSH == true ]]; then
+      systemctl enable ssh 
+    else
+      systemctl disable ssh
+    fi
   else
-    systemctl disable octoprint
-  fi
+    if [[ $ENABLE_OCTO == true ]]; then
+      systemctl enable --now octoprint
+    else
+      systemctl disable --now octoprint
+    fi
 
-  if [[ $ENABLE_MJPG == true ]]; then
-    systemctl enable mjpg-streamer
-    raspi-config nonint do_camera 0 # Counter intuitively enables the camera  
-  else
-    systemctl disable mjpg-streamer
-    raspi-config nonint do_camera 1 # Disables the camera
-  fi
+    if [[ $ENABLE_MJPG == true ]]; then
+      systemctl enable --now mjpg-streamer
+      raspi-config nonint do_camera 0 # Counter intuitively enables the camera
+      ASK_REBOOT=true
+    else
+      systemctl disable --now mjpg-streamer
+      raspi-config nonint do_camera 1 # Disables the camera
+      ASK_REBOOT=true
+    fi
 
-  if [[ $ENABLE_OCTO == true ]] && [[ $ENABLE_MJPG == true ]]; then
-    systemctl enable nginx
-  elif [[ $ENABLE_OCTO == false ]] && [[ $ENABLE_MJPG == false ]]; then
-    systemctl disable nginx
-  fi
+    if [[ $ENABLE_OCTO == true ]] && [[ $ENABLE_MJPG == true ]]; then
+      systemctl enable --now nginx
+    elif [[ $ENABLE_OCTO == false ]] && [[ $ENABLE_MJPG == false ]]; then
+      systemctl disable --now nginx
+    fi
 
-  if [[ $ENABLE_GUI == true ]]; then
-    systemctl set-default graphical.target 
-  else
-    systemctl set-default multi-user.target  
-  fi
+    if [[ $ENABLE_GUI == true ]]; then
+      systemctl set-default graphical.target
+      ASK_REBOOT=true
+    else
+      systemctl set-default multi-user.target
+      ASK_REBOOT=true
+    fi
 
-  if [[ $ENABLE_SSH == true ]]; then
-    systemctl enable ssh 
-  else
-    systemctl disable ssh
-  fi
-
-  ASK_REBOOT=true
+    if [[ $ENABLE_SSH == true ]]; then
+      systemctl enable --now ssh 
+    else
+      systemctl disable --now ssh
+    fi
+  fi 
 
 << 'EOF'
   for ((i = 0; i <= 3; i++)); do
@@ -102,8 +142,9 @@ EOF
 }
 
 screen_timeout () {
-  local TIMEOUT=$(dialog --nocancel --title "Screen Timeout" --inputbox "Input your desired screen timeout in seconds.\nEnter \"off\" to disable the screen timeout.\n\nAdding a screen timeout can reduce screen burn in.\n\nDefault: off" 12 60 "off" 3>&1 1>&2 2>&3) 
-  
+  local TIMEOUT=$(dialog $FIRST_TIME --title "Screen Timeout" --inputbox "Input your desired screen timeout in seconds.\nEnter \"off\" to disable the screen timeout.\n\nAdding a screen timeout can reduce screen burn in.\n\nDefault: off" 12 60 "off" 3>&1 1>&2 2>&3 || return 0) 
+ 
+  # If timeout is blank, exit before we break everything 
   [[ "$TIMEOUT" == "" ]] && return 0
 
   cat > /home/kiosk/.xtimeout << EOF
@@ -118,11 +159,16 @@ EOF
 }
 
 octo_autologin () {
-  local AUTOLOGIN_MENU="$(dialog --title "OctoPrint AutoLogin" --nocancel --inputbox "Enter the username of the user that you want the GUI to autologin as on startup." 10 50 $(octo-settings read accessControl autologinAs) 3>&1 1>&2 2>&3)"
+  local AUTOLOGIN_MENU="$(dialog --title "OctoPrint AutoLogin" --inputbox "Enter the username of the user that you want the GUI to autologin as on startup." 10 50 $(octo-settings read accessControl autologinAs) 3>&1 1>&2 2>&3 || return 0)"
+ 
+  # If the text field is blank, exit before everything (probably doesn't) break 
+  [[ "$AUTOLOGIN_MENU" == "" ]] && return 0
+
   octo-settings write accessControl autologinAs $AUTOLOGIN_MENU
   
   if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]]; then
     systemctl restart octoprint
+    ASK_REBOOT=true
   fi
 }
 
@@ -136,7 +182,7 @@ nginx_listen () {
     LISTEN="443"
   fi
   
-  LISTEN=$(dialog --title "Nginx Config" --nocancel --inputbox "Configure what port and IP Nginx should listen on.\nTo listen on all IPs, just enter the port.\nDefault: 443" 11 50 "$LISTEN" 3>&1 1>&2 2>&3)
+  LISTEN=$(dialog --title "Nginx Config" --inputbox "Configure what port and IP Nginx should listen on.\nTo listen on all IPs, just enter the port.\nDefault: 443" 11 50 "$LISTEN" 3>&1 1>&2 2>&3 || return 0)
 
   [[ "$LISTEN" == "" ]] && return 0
 
@@ -150,7 +196,7 @@ nginx_listen () {
 }
 
 nginx_auth () {
-  local NGINXAUTH_MENU=$(dialog --colors --nocancel --insecure --title "Nginx Config" --mixedform "Input desired username and password for the MJPG stream.\n\nLeave both fields blank if you do not want authentication \Zb\Z1(NOT RECOMMENDED)\Zn." 12 60 0\
+  local NGINXAUTH_MENU=$(dialog --colors $FIRST_TIME --insecure --title "Nginx Config" --mixedform "Input desired username and password for the MJPG stream.\n\nLeave both fields blank if you do not want authentication \Zb\Z1(NOT RECOMMENDED)\Zn." 12 60 0\
     "Username: " 1 1 "" 1 11 10 0 0 \
     "Password: " 2 1 "" 2 11 30 0 1 3>&1 1>&2 2>&3 || return 0)
   NGINXAUTH_MENU=($NGINXAUTH_MENU)
@@ -208,7 +254,7 @@ video_select () {
     fi
   done
 
-  local DEVICE_MENU=$(dialog --title "MJPG Config" --nocancel --radiolist "Choose which video device you wish to use for MJPG-Streamer" 10 50 0 $DEVICELIST 3>&1 1>&2 2>&3)
+  local DEVICE_MENU=$(dialog --title "MJPG Config" $FIRST_TIME --radiolist "Choose which video device you wish to use for MJPG-Streamer" 10 50 0 $DEVICELIST 3>&1 1>&2 2>&3 || return 0)
   
   [[ "$DEVICE_MENU" == "" ]] && return 0
  
@@ -229,11 +275,12 @@ video_config () {
     VIDEO_DEVICE="/dev/video0"
   fi  
 
-  local VIDEOCONFIG_MENU=$(dialog --nocancel --title "MJPG Config" --form "Choose desired camera resolution and framerate." 10 50 0\
+  local VIDEOCONFIG_MENU=$(dialog $FIRST_TIME --title "MJPG Config" --form "Choose desired camera resolution and framerate." 10 50 0\
     "Resolution: " 1 1 "$VIDEO_SIZE" 1 13 10 0 \
-    "Framerate: " 2 1 "$FRAMERATE" 2 12 3 0 3>&1 1>&2 2>&3)
+    "Framerate: " 2 1 "$FRAMERATE" 2 12 3 0 3>&1 1>&2 2>&3 || return 0)
   VIDEOCONFIG_MENU=($VIDEOCONFIG_MENU)
 
+  # If one of the fields is empty, tell the user to start over
   if [[ "${VIDEOCONFIG_MENU[0]}" == "" ]] || [[ "${VIDEOCONFIG_MENU[1]}" == "" ]]; then
     dialog --title "Error" --msgbox "Invalid input!" 10 50
     video_config
