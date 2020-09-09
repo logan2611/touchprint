@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TouchPrint
 TouchPrint is a lightweight fork of Raspberry Pi OS whos purpose is to host OctoPrint and to display it on a connected screen.
 TouchPrint is very customizable, and both the GUI and/or OctoPrint can be disabled if you already have an existing setup to perform those tasks.
