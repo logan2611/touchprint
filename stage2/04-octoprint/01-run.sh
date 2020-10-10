@@ -23,9 +23,8 @@ systemctl disable nginx
 
 # If OctoPrint already exists, skip this (for debugging)
 if [[ ! -f /srv/octoprint/bin/octoprint ]]; then
-  cd /srv/ || exit 1
-  virtualenv octoprint || exit 1
-  source octoprint/bin/activate || exit 1
+  python3 -m venv /srv/octoprint || exit 1
+  source /srv/octoprint/bin/activate || exit 1
   pip install pip --upgrade 
   pip install octoprint || exit 1
   # Fix permissions
