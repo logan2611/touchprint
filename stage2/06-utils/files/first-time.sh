@@ -41,7 +41,7 @@ recommended_menu () {
     echo $(( $i * 100 / ${#RECOMMEND_MENU[@]} )) | dialog --title "Plugin Manager" --gauge "Installing ${RECOMMEND_MENU[$i]}" 10 50
     case ${RECOMMEND_MENU[$i]} in
       "OctoPrint-Dashboard") install_package "https://github.com/StefanCohen/OctoPrint-Dashboard/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]}; install_package "https://github.com/OllisGit/OctoPrint-DisplayLayerProgress/releases/latest/download/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
-      "ExcludeRegion") install_package "https://github.com/bradcfisher/OctoPrint-ExcludeRegionPlugin/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
+      "ExcludeRegion") install_package "https://github.com/bradcfisher/OctoPrint-ExcludeRegionPlugin/archive/feature/python3_compat.zip" || error_install ${RECOMMEND_MENU[$i]};;
       "NavbarTemp") install_package "https://github.com/imrahil/OctoPrint-NavbarTemp/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
       "PrintTimeGenius") install_package "https://github.com/eyal0/OctoPrint-PrintTimeGenius/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;
       "HeaterTimeout") install_package "https://github.com/google/OctoPrint-HeaterTimeout/archive/master.zip" || error_install ${RECOMMEND_MENU[$i]};;  
