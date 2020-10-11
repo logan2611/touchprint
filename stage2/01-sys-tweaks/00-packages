@@ -14,11 +14,9 @@ parted
 unzip
 build-essential
 manpages-dev
-python
 bash-completion
 gdb
 pkg-config
-python-rpi.gpio
 v4l-utils
 avahi-daemon
 hardlink

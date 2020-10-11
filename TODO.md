@@ -5,9 +5,6 @@
 - Add hostname configuration (replace nmtui)
 - Import/export settings
 
-## OctoPrint
-- Python 3
-
 ## Misc
 - Cleanup
 - More security
