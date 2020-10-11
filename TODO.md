@@ -3,6 +3,7 @@
 ## First time/TP-Config
 - Add network configuration (replace nmtui)
 - Add hostname configuration (replace nmtui)
+- Add timezone configuration (replace tzdata)
 - Import/export settings
 
 ## Misc
