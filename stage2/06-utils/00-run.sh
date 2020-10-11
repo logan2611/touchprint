@@ -12,7 +12,7 @@ mkdir -p ${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/
 cat > ${ROOTFS_DIR}/etc/systemd/system/getty@tty1.service.d/override.conf << 'EOF'
 [Service]
 ExecStart=
-ExecStart=-/usr/sbin/agetty --autologin root --noclear %I $TERM
+ExecStart=-/usr/sbin/agetty --skip-login --nonewline --noissue --autologin root --noclear %I $TERM
 EOF
 
 on_chroot << EOF
