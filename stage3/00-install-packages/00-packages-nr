@@ -3,7 +3,6 @@ xserver-xorg-video-fbdev
 xserver-xorg-video-fbturbo
 xinit
 menu-xdg
-zenity
 xdg-utils
 gvfs-backends
 gvfs-fuse
