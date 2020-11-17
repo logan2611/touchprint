@@ -19,8 +19,6 @@ if [ -d "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config" ]; then
 	chmod 700 "${ROOTFS_DIR}/home/${FIRST_USER_NAME}/.config"
 fi
 
-echo "Part 3"
-rm -f "${ROOTFS_DIR}/etc/apt/apt.conf.d/51cache"
 rm -f "${ROOTFS_DIR}/usr/bin/qemu-arm-static"
 
 echo "Part 4"
