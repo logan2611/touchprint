@@ -14,3 +14,4 @@
 ## Things to consider
 - Wayland using labwc/waybox
 - Detect if frontend did not load correctly (probably not easy)
+- Onboard
