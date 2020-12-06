@@ -44,6 +44,7 @@ TODO
     | Ubuntu/Debian | `apt install xz-utils` |
     | Arch/Manjaro  | `pacman -S xz`         |
     | Mac OS        | `brew install xz`      |
+    | FreeBSD       | `pkg install xz-utils` |
 
 4. Run `xz -d -c IMAGE_NAME.img.xz | sudo dd of=/dev/sdX`, replacing IMAGE\_NAME and /dev/sdX with the appropriate paths, and adding flags per your preferences.
 
