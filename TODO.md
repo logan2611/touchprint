@@ -5,6 +5,10 @@
 - Add hostname configuration (replace nmtui)
 - Add timezone configuration (replace tzdata)
 - Import/export settings
+- Enable/Disable HTTP redirect from port 80
+
+## Nginx
+- Update deprecated "ssl" option to "listen PORT ssl;"
 
 ## Misc
 - Cleanup
