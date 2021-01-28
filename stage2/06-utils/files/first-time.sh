@@ -72,24 +72,39 @@ suggested_menu () {
   done
 }
 
-dialog --title "NOTICE" --colors --msgbox "This collection of software is currently in beta, it may contain several bugs. This software is \Zb\Z1NOT\Zn recommended for a production environment." 10 50
+# Import settings from sdcard's fat32 partition if available
+if [[ -f /boot/settings ]]; then
+  source /boot/settings
+else
+  dialog --title "NOTICE" --colors --msgbox "This collection of software is currently in beta, it may contain several bugs. This software is \Zb\Z1NOT\Zn recommended for a production environment." 10 50
+fi
 
 # Makes a certificate and key for Nginx HTTPS
 openssl req -x509 -nodes -days 36500 -newkey rsa:4096 -subj "/C=/ST=/L=/O=/OU=/CN=*/emailAddress=" -out /etc/ssl/certs/nginx-octoprint.crt -keyout /etc/ssl/private/nginx-octoprint.key
 
 # Force the user to change the pi user's password before the RPi gets botnetted
-change_password
+if [[ -n $PI_PWD_HASH ]]; then
+  change_password hash $PI_PWD_HASH
+else
+  change_password $PI_PWD
+fi
 
-dialog --title "Network Configuration" --nocancel --msgbox "Setup will now open nmtui, a program to help configure your ethernet/wireless interfaces. Hit Quit when you are done." 10 50
-nmtui
+if ! [[ -n $SKIP_NETWORK ]] && dialog --title "Network Configuration" --nocancel --yesno "Do you wish to open nmtui, a program to help configure your ethernet/wireless interfaces?" 10 50; then
+  nmtui
+fi
 
 # Configure the timezone
-dpkg-reconfigure tzdata
+if [[ -n $TIMEZONE ]]; then
+  ln -fs /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+  DEBIAN_FRONTEND=noninteractive dpkg-reconfigure --frontend noninteractive tzdata
+else 
+  dpkg-reconfigure tzdata
+fi
 
 # Enable/disable OctoPrint, GUI, MJPG and SSH
-service_toggle 
+service_toggle ${SERVICE_TOGGLE[0]} ${SERVICE_TOGGLE[1]} ${SERVICE_TOGGLE[2]} ${SERVICE_TOGGLE[3]}
 
-screen_timeout
+screen_timeout $SCREEN_TIMEOUT
 
 # If a touchscreen is detected, and the GUI is enabled, ask the user if they want to calibrate it
 if ( udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN=1 >/dev/null ) && [[ $(readlink -f /etc/systemd/system/default.target) == "/usr/lib/systemd/system/graphical.target" ]] && dialog --title "Touchscreen Calibration" --defaultno --yesno "Do you wish to calibrate your touchscreen?\nMost touchscreens are calibrated out of the factory, so this is usually not needed." 10 60; then
@@ -97,34 +112,43 @@ if ( udevadm info --export-db | grep ID_INPUT_TOUCHSCREEN=1 >/dev/null ) && [[ $
 fi
 
 # If OctoPrint and the GUI are running locally, ask the user if they want to change the autologin user
-if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && [[ $(readlink -f /etc/systemd/system/default.target) == "/usr/lib/systemd/system/graphical.target" ]] && dialog --title "OctoPrint AutoLogin" --yesno "Do you wish to configure the user that the GUI auto logs in as in OctoPrint?\nThis is required if you wish to enable access control in OctoPrint." 10 60; then
-  octo_autologin
+if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && [[ $(readlink -f /etc/systemd/system/default.target) == "/usr/lib/systemd/system/graphical.target" ]] && ( [[ "$OCTO_AUTOLOGIN" != "" ]] || dialog --title "OctoPrint AutoLogin" --yesno "Do you wish to configure the user that the GUI auto logs in as in OctoPrint?\nThis is required if you wish to enable access control in OctoPrint." 10 60 ); then
+  octo_autologin $OCTO_AUTOLOGIN
 fi
 
 # If OctoPrint/MJPG Streamer is running locally, ask if the user wants to change the default listening port/IP (optional)
-if ( [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] || [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]] ) && dialog --title "Nginx Config" --defaultno --yesno "Do you wish to change the default Nginx listening address and/or port?" 10 60; then
-  nginx_listen
+if ( [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] || [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]] ) && ( [[ "$NGINX_LISTEN" != "" ]] || dialog --title "Nginx Config" --defaultno --yesno "Do you wish to change the default Nginx listening address and/or port?" 10 60 ); then
+  nginx_listen $NGINX_LISTEN
 fi
 
 # If MJPG service is enabled, ask the user to configure Nginx basic auth and the video device
 if [[ -f /etc/systemd/system/multi-user.target.wants/mjpg-streamer.service ]]; then
-  nginx_auth
-  video_select
-  video_config
+  if [[ -n $NGINX_AUTH_HASH ]]; then
+    nginx_auth hash $NGINX_AUTH_HASH
+  else
+    nginx_auth $NGINX_AUTH
+  fi
+  video_select $MJPG_DEVICE 
+  video_config $MJPG_SIZE $MJPG_FRAMERATE
 fi
 
 # If OctoPrint is running locally, ask if user wants to preinstall recommended plugins
-if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && dialog --title "Plugin Manager" --yesno "Do you wish to preinstall some suggested plugins?" 10 60; then 
+if [[ -f /etc/systemd/system/multi-user.target.wants/octoprint.service ]] && ! [[ -n $SKIP_PLUGINS ]] && dialog --title "Plugin Manager" --yesno "Do you wish to preinstall some suggested plugins?" 10 60; then 
   recommended_menu && suggested_menu
-  chown -R octoprint:octoprint /srv/octoprint
-  chown -R octoprint:octoprint /home/octoprint
 fi
+
+# Just incase
+chown -R octoprint:octoprint /srv/octoprint
+chown -R octoprint:octoprint /home/octoprint
 
 # Delete the autologin override and first-time setup utility
 rm /etc/systemd/system/getty@tty1.service.d/override.conf 
 rm /etc/profile.d/first-time.sh
 
-dialog --title "TouchPrint Config" --colors --msgbox "Congratulations! Your install of TouchPrint has been successfully configured.\n\n\Z1To change these settings later, login to your Raspberry Pi and run \"\Z1\Zbtp-config\Zn\Z1\"." 0 0
+if ! [[ -f /boot/settings ]]; then
+  dialog --title "TouchPrint Config" --colors --msgbox "Congratulations! Your install of TouchPrint has been successfully configured.\n\n\Z1To change these settings later, login to your Raspberry Pi and run \"\Z1\Zbtp-config\Zn\Z1\"." 0 0
+fi
+
 dialog --title "TouchPrint Config" --infobox "Rebooting..." 0 0
 sleep 1
 reboot

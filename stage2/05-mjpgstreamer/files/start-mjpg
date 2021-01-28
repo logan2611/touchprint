@@ -4,11 +4,11 @@
 source /usr/local/etc/mjpg-server/config.sh
 
 # Test if camera can just give us MJPG frames so that we can save a bunch of CPU
-if ffmpeg -input_format mjpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -nostats -v quiet -i $VIDEO_DEVICE vframes 1 -f null - >/dev/null; then
-  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -input_format mjpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -i $VIDEO_DEVICE -f mpjpeg -c:v copy - 
+if ffmpeg -input_format mjpeg -video_size $VIDEO_SIZE -framerate $VIDEO_FRAMERATE -nostats -v quiet -i $VIDEO_DEVICE vframes 1 -f null - >/dev/null; then
+  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -input_format mjpeg -video_size $VIDEO_SIZE -framerate $VIDEO_FRAMERATE -i $VIDEO_DEVICE -f mpjpeg -c:v copy - 
 # Oh, it can't :( Guess I'll just blast the CPU to maybe get 5FPS
-elif ffmpeg -video_size $VIDEO_SIZE -framerate $FRAMERATE -nostats -v quiet -i $VIDEO_DEVICE -vframes 1 -f null - >/dev/null; then  
-  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -input_format rawvideo -video_size $VIDEO_SIZE -framerate $FRAMERATE -i /dev/video0 -f mpjpeg -
+elif ffmpeg -video_size $VIDEO_SIZE -framerate $VIDEO_FRAMERATE -nostats -v quiet -i $VIDEO_DEVICE -vframes 1 -f null - >/dev/null; then  
+  /usr/local/bin/mjpeg-server -a 127.0.0.1:9000 -- ffmpeg -input_format rawvideo -video_size $VIDEO_SIZE -framerate $VIDEO_FRAMERATE -i /dev/video0 -f mpjpeg -
 else
   echo "FFmpeg could not start. Double check your configuration."
   exit 1
