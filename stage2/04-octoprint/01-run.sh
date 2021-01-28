@@ -6,7 +6,7 @@ mkdir -p ${ROOTFS_DIR}/home/octoprint/.octoprint/
 install -m 600 files/config.yaml ${ROOTFS_DIR}/home/octoprint/.octoprint/config.yaml 
 
 install -m 644 files/nginx.conf ${ROOTFS_DIR}/etc/nginx/nginx.conf
-echo -e "listen 443;" > ${ROOTFS_DIR}/etc/nginx/listen.conf
+echo -e "listen 443 ssl;" > ${ROOTFS_DIR}/etc/nginx/listen.conf
 touch ${ROOTFS_DIR}/etc/nginx/auth.conf
 
 mkdir -p ${ROOTFS_DIR}/usr/local/bin 
